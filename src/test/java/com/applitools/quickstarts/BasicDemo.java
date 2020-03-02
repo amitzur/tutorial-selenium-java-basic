@@ -3,8 +3,11 @@ package com.applitools.quickstarts;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.applitools.eyes.*;
+import com.applitools.eyes.selenium.*;
 import com.applitools.eyes.selenium.ClassicRunner;
+import com.applitools.eyes.visualgrid.services.VisualGridRunner;
 import com.applitools.eyes.selenium.Eyes;
+import com.applitools.eyes.selenium.fluent.Target;
 
 import org.junit.After;
 import org.junit.Before;
@@ -14,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 /**
@@ -26,6 +30,8 @@ public class BasicDemo {
 	private Eyes eyes;
 	private static BatchInfo batch;
 	private WebDriver driver;
+	private Configuration suiteConfig;
+	private LogHandler logHandler;
 
 	@BeforeClass
 	public static void setBatch() {
@@ -36,10 +42,15 @@ public class BasicDemo {
 	@Before
 	public void beforeEach() {
 		// Initialize the Runner for your test.
-		runner = new ClassicRunner();
+		runner = new VisualGridRunner(10);
+
+		suiteConfig = new Configuration();
+		suiteConfig.addBrowser(900, 600, BrowserType.CHROME);
 
 		// Initialize the eyes SDK
 		eyes = new Eyes(runner);
+		eyes.setLogHandler(new StdoutLogHandler(true));
+		eyes.setConfiguration(suiteConfig);
 
 		// Raise an error if no API Key has been found.
 		if(isNullOrEmpty(System.getenv("APPLITOOLS_API_KEY"))) {
@@ -62,24 +73,14 @@ public class BasicDemo {
 		// Set AUT's name, test name and viewport size (width X height)
 		// We have set it to 800 x 600 to accommodate various screens. Feel free to
 		// change it.
-		eyes.open(driver, "Demo App", "Smoke Test", new RectangleSize(800, 800));
+		eyes.open(driver, "Demo App", "Smoke Test vg", new RectangleSize(800, 800));
 
 		// Navigate the browser to the "ACME" demo app.
 		driver.get("https://demo.applitools.com");
 
-		// To see visual bugs after the first run, use the commented line below instead.
-		//driver.get("https://demo.applitools.com/index_v2.html");
-				
-		// Visual checkpoint #1 - Check the login page.
-		eyes.checkWindow("Login Window");
-
-		// This will create a test with two test steps.
-		driver.findElement(By.id("log-in")).click();
-
-		// Visual checkpoint #2 - Check the app page.
-		eyes.checkWindow("App Window");
-
-		// End the test.
+		eyes.checkWindow("App window");
+		// WebElement el = driver.findElement(By.id("log-in"));
+		// eyes.check("App Window", Target.region(el));
 		eyes.closeAsync();
 	}
 
